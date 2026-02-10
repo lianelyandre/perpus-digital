@@ -4,53 +4,49 @@
 <div class="row mb-4">
 
     @php
-    $menunggu = \App\Models\Peminjaman::where('id', Auth::id())->where('StatusPeminjaman', 'Menunggu')->count();
-    $dipinjam = \App\Models\Peminjaman::where('id', Auth::id())->where('StatusPeminjaman', 'Dipinjam')->count();
+    $menunggu = \App\Models\Peminjaman::where('id', Auth::id())->where('StatusPeminjaman','Menunggu')->count();
+    $dipinjam = \App\Models\Peminjaman::where('id', Auth::id())->where('StatusPeminjaman','Dipinjam')->count();
     $total = \App\Models\Peminjaman::where('id', Auth::id())->count();
     @endphp
 
     <div class="col-md-4">
-        <div class="card stat-card border-0 shadow-sm">
-            <div class="card-body d-flex align-items-center">
-                <div class="icon-box bg-info">
-                    <i class="fas fa-hourglass-half"></i>
-                </div>
-                <div class="ml-3">
-                    <p class="stat-label">Menunggu ACC</p>
-                    <h3 class="stat-value">{{ $menunggu }}</h3>
-                </div>
+        <div class="lux-stat">
+            <div class="lux-icon bg-info">
+                <i class="fas fa-hourglass-half"></i>
+            </div>
+            <div>
+                <div class="lux-label">Menunggu ACC</div>
+                <div class="lux-value">{{ $menunggu }}</div>
             </div>
         </div>
     </div>
 
     <div class="col-md-4">
-        <div class="card stat-card border-0 shadow-sm">
-            <div class="card-body d-flex align-items-center">
-                <div class="icon-box bg-success">
-                    <i class="fas fa-book-reader"></i>
-                </div>
-                <div class="ml-3">
-                    <p class="stat-label">Sedang Dipinjam</p>
-                    <h3 class="stat-value">{{ $dipinjam }}</h3>
-                </div>
+        <div class="lux-stat">
+            <div class="lux-icon bg-success">
+                <i class="fas fa-book-reader"></i>
+            </div>
+            <div>
+                <div class="lux-label">Sedang Dipinjam</div>
+                <div class="lux-value">{{ $dipinjam }}</div>
             </div>
         </div>
     </div>
 
     <div class="col-md-4">
-        <div class="card stat-card border-0 shadow-sm">
-            <div class="card-body d-flex align-items-center">
-                <div class="icon-box bg-dark">
-                    <i class="fas fa-history"></i>
-                </div>
-                <div class="ml-3">
-                    <p class="stat-label">Total Pernah Pinjam</p>
-                    <h3 class="stat-value">{{ $total }}</h3>
-                </div>
+        <div class="lux-stat">
+            <div class="lux-icon bg-dark">
+                <i class="fas fa-history"></i>
+            </div>
+            <div>
+                <div class="lux-label">Total Pernah Pinjam</div>
+                <div class="lux-value">{{ $total }}</div>
             </div>
         </div>
     </div>
+
 </div>
+
 
 {{-- ================= 2. MY LOAN ACTIVITY ================= --}}
 
@@ -63,16 +59,18 @@ $myBooks = \App\Models\Peminjaman::where('id', Auth::id())
 @endphp
 
 @if($myBooks->count() > 0)
-<div class="card elegant-table border-0 shadow-sm mb-5">
-    <div class="card-header bg-gradient-dark text-white">
-        <h6 class="mb-0 font-weight-bold">
+
+<div class="lux-card mb-5">
+
+    <div class="lux-header">
+        <h6>
             <i class="fas fa-layer-group mr-2 text-warning"></i>
             Aktivitas Pinjaman Saya
         </h6>
     </div>
 
     <div class="table-responsive">
-        <table class="table table-hover mb-0 align-middle">
+        <table class="lux-table">
             <thead>
                 <tr>
                     <th>Buku</th>
@@ -80,52 +78,68 @@ $myBooks = \App\Models\Peminjaman::where('id', Auth::id())
                     <th class="text-center">Aksi</th>
                 </tr>
             </thead>
+
             <tbody>
+
                 @foreach($myBooks as $mb)
                 <tr>
+
                     <td>
-                        <div class="font-weight-bold text-dark">
+                        <div class="font-weight-bold">
                             {{ $mb->buku->Judul }}
                         </div>
                         <small class="text-muted">
-                            ID: #{{ $mb->PeminjamanID }}
+                            ID #{{ $mb->PeminjamanID }}
                         </small>
                     </td>
 
                     <td class="text-center">
-                        <span class="badge badge-pill px-3 py-2
-                            {{ $mb->StatusPeminjaman == 'Menunggu' ? 'badge-info' : 'badge-primary' }}">
+                        <span class="lux-badge
+                    {{ $mb->StatusPeminjaman=='Menunggu' ? 'badge-wait' : 'badge-active' }}">
                             {{ $mb->StatusPeminjaman }}
                         </span>
                     </td>
 
                     <td class="text-center">
-                        @if($mb->StatusPeminjaman == 'Dipinjam')
-                        <form action="{{ route('pinjam.konfirmasi', $mb->PeminjamanID) }}" method="POST" class="d-inline">
-                            @csrf @method('PUT')
+
+                        @if($mb->StatusPeminjaman=='Dipinjam')
+
+                        <form action="{{ route('pinjam.konfirmasi',$mb->PeminjamanID) }}" method="POST">
+                            @csrf
+                            @method('PUT')
+
                             <input type="hidden" name="status" value="Kembali">
 
-                            <button class="btn btn-warning btn-sm font-weight-bold px-3">
-                                <i class="fas fa-undo-alt mr-1"></i> Kembalikan
+                            <button class="lux-btn-warning">
+                                <i class="fas fa-undo-alt mr-1"></i>
+                                Kembalikan
                             </button>
                         </form>
 
                         <div class="deadline-text">
                             Deadline: {{ date('d M Y', strtotime($mb->TanggalPengembalian)) }}
                         </div>
+
                         @else
-                        <span class="text-muted small">
+
+                        <small class="text-muted">
                             <i class="fas fa-clock mr-1"></i>
-                            Menunggu Persetujuan
-                        </span>
+                            Menunggu ACC
+                        </small>
+
                         @endif
+
                     </td>
+
                 </tr>
                 @endforeach
+
             </tbody>
         </table>
     </div>
+
 </div>
+
 @endif
 
 {{-- ================= 3. BOOK CATALOG ================= --}}

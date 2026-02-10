@@ -1,194 +1,268 @@
-<x-app-layout>
+@extends('layouts.app')
 
-    <!-- DataTables CSS -->
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap4.min.css">
-    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.4.1/css/responsive.bootstrap4.min.css">
+@section('title', 'Manajemen User')
 
-    <!-- Luxury Theme Overrides -->
-    <style>
-        .dataTables_wrapper .dataTables_filter input {
-            border: 1.5px solid #e2e8f0;
-            border-radius: 12px;
-            padding: 6px 14px;
-            margin-left: 8px;
-            transition: all 0.25s ease;
-        }
+@section('content')
+<div class="container-fluid py-4">
 
-        .dataTables_wrapper .dataTables_filter input:focus {
-            border-color: #d4af37;
-            box-shadow: 0 0 0 2px rgba(212,175,55,0.15);
-            outline: none;
-        }
-
-        .page-item.active .page-link {
-            background-color: #0f172a !important;
-            border-color: #0f172a !important;
-            color: #d4af37 !important;
-            font-weight: 600;
-        }
-
-        .page-link {
-            color: #475569 !important;
-            border-radius: 8px !important;
-            margin: 0 2px;
-        }
-
-        table.dataTable thead th {
-            background: #f8fafc;
-            border-bottom: 2px solid #d4af37 !important;
-            color: #0f172a;
-            font-size: 0.75rem;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
-        }
-    </style>
-
-    <div class="max-w-7xl mx-auto px-4 py-6 space-y-6">
-
-        <!-- Header Section -->
-        <div class="flex flex-col md:flex-row justify-between md:items-center gap-4">
+    {{-- HEADER --}}
+    <div class="lux-header mb-4 p-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
             <div>
-                <h1 class="text-2xl font-bold text-slate-800 tracking-tight">
-                    Manajemen Pengguna
-                </h1>
-                <p class="text-sm text-slate-500">
-                    Kelola akun administrator, petugas, dan peminjam
-                </p>
+                <h2 class="mb-1 font-weight-bold">Manajemen Pengguna</h2>
+                <p class="mb-0 opacity-75">Kelola administrator, petugas, dan peminjam.</p>
             </div>
 
-            <a href="{{ route('user.create') }}"
-               class="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold uppercase tracking-wider rounded-xl shadow-lg shadow-slate-900/20 transition-all hover:-translate-y-0.5">
-                <span class="w-5 h-5 flex items-center justify-center rounded-full bg-white/20">
-                    <i class="fas fa-plus text-amber-400 text-[10px]"></i>
-                </span>
-                Tambah User
+            <a href="{{ route('user.create') }}" class="btn btn-luxury">
+                <i class="fas fa-user-plus mr-2"></i> Tambah User
             </a>
-        </div>
-
-        <!-- Table Card -->
-        <div class="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
-
-            <!-- Card Header -->
-            <div class="bg-slate-900 px-6 py-4 border-b-4 border-amber-400 flex items-center gap-3">
-                <div class="bg-white/10 p-2 rounded-lg text-amber-400">
-                    <i class="fas fa-users"></i>
-                </div>
-                <h2 class="text-white font-semibold tracking-wide uppercase text-sm">
-                    Daftar Akun Pengguna
-                </h2>
-            </div>
-
-            <!-- Table -->
-            <div class="p-6">
-                <table id="tabelUser" class="w-full text-sm">
-                    <thead>
-                        <tr>
-                            <th class="py-3 px-4">User</th>
-                            <th class="py-3 px-4">Alamat</th>
-                            <th class="py-3 px-4 text-center">Role</th>
-                            <th class="py-3 px-4 text-center w-32">Aksi</th>
-                        </tr>
-                    </thead>
-
-                    <tbody class="divide-y divide-slate-100">
-                        @foreach($users as $u)
-                        <tr class="hover:bg-slate-50 transition-colors duration-150">
-
-                            <!-- User Info -->
-                            <td class="px-4 py-3">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-xs font-bold text-slate-900 uppercase">
-                                        {{ substr($u->nama_lengkap, 0, 2) }}
-                                    </div>
-                                    <div>
-                                        <div class="font-semibold text-slate-800 text-sm">
-                                            {{ $u->nama_lengkap }}
-                                        </div>
-                                        <div class="text-xs text-slate-400 font-mono">
-                                            @{{ $u->username }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-
-                            <!-- Address -->
-                            <td class="px-4 py-3 text-xs text-slate-600">
-                                {{ $u->alamat ?? '-' }}
-                            </td>
-
-                            <!-- Role -->
-                            <td class="px-4 py-3 text-center">
-                                @if($u->role == 'admin')
-                                    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-semibold bg-slate-900 text-amber-400 border border-slate-800">
-                                        <i class="fas fa-crown text-[9px]"></i>
-                                        ADMIN
-                                    </span>
-                                @elseif($u->role == 'petugas')
-                                    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">
-                                        <i class="fas fa-id-badge text-[9px]"></i>
-                                        PETUGAS
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
-                                        <i class="fas fa-user text-[9px]"></i>
-                                        PEMINJAM
-                                    </span>
-                                @endif
-                            </td>
-
-                            <!-- Action -->
-                            <td class="px-4 py-3 text-center">
-                                <div class="flex justify-center gap-2">
-
-                                    <a href="{{ route('user.edit', $u->id) }}"
-                                       class="w-8 h-8 flex items-center justify-center rounded-lg bg-amber-50 text-amber-600 border border-amber-100 hover:bg-amber-500 hover:text-white transition-all shadow-sm">
-                                        <i class="fas fa-pen text-[10px]"></i>
-                                    </a>
-
-                                    @if(Auth::id() != $u->id)
-                                    <form action="{{ route('user.destroy', $u->id) }}" method="POST" onsubmit="return confirm('Hapus user ini?')">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit"
-                                                class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-500 border border-red-100 hover:bg-red-500 hover:text-white transition-all shadow-sm">
-                                            <i class="fas fa-trash text-[10px]"></i>
-                                        </button>
-                                    </form>
-                                    @endif
-
-                                </div>
-                            </td>
-                        </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            </div>
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap4.min.js"></script>
-    <script src="https://cdn.datatables.net/responsive/2.4.1/js/dataTables.responsive.min.js"></script>
+    {{-- ALERT --}}
+    @if(session('success'))
+    <div class="alert alert-lux-success alert-dismissible fade show shadow-sm border-0 mb-4">
+        <i class="fas fa-check-circle mr-2"></i> {{ session('success') }}
+        <button type="button" class="close" data-dismiss="alert">
+            <span>&times;</span>
+        </button>
+    </div>
+    @endif
 
-    <script>
-        $(document).ready(function() {
-            $('#tabelUser').DataTable({
-                responsive: true,
-                autoWidth: false,
-                pageLength: 5,
-                language: {
-                    search: "Cari:",
-                    lengthMenu: "Tampilkan _MENU_",
-                    zeroRecords: "Data tidak ditemukan",
-                    info: "Hal _PAGE_ dari _PAGES_",
-                    infoEmpty: "Kosong",
-                    infoFiltered: "(difilter dari _MAX_ total data)",
-                    paginate: { next: ">", previous: "<" }
-                }
-            });
-        });
-    </script>
+    {{-- CARD TABLE --}}
+    <div class="card lux-card border-0">
 
-</x-app-layout>
+        <div class="card-header bg-transparent border-0 py-3 px-4">
+            <h5 class="mb-0 font-weight-bold">
+                <i class="fas fa-users mr-2 text-primary"></i>
+                Data Pengguna
+            </h5>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+
+                <table class="table lux-table mb-0">
+                    <thead>
+                        <tr>
+                            <th width="5%">No</th>
+                            <th>User</th>
+                            <th>Alamat</th>
+                            <th class="text-center">Role</th>
+                            <th class="text-center">Aksi</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @forelse($users as $key => $user)
+                        <tr>
+                            <td class="text-center text-muted font-weight-bold">
+                                {{ $key + 1 }}
+                            </td>
+
+                            {{-- USER INFO --}}
+                            <td>
+                                <div class="d-flex align-items-center">
+
+                                    <div class="avatar-lux mr-3">
+                                        {{ strtoupper(substr($user->nama_lengkap,0,1)) }}
+                                    </div>
+
+                                    <div>
+                                        <div class="font-weight-bold text-dark">
+                                            {{ $user->nama_lengkap }}
+                                        </div>
+                                        <small class="text-muted">
+                                            {{ $user->username }} • {{ $user->email }}
+                                        </small>
+                                    </div>
+
+                                </div>
+                            </td>
+
+                            <td class="text-muted small">
+                                {{ Str::limit($user->alamat,60) }}
+                            </td>
+
+                            {{-- ROLE --}}
+                            <td class="text-center">
+                                @php
+                                $roleClass = match($user->role) {
+                                'admin' => 'role-admin',
+                                'petugas' => 'role-petugas',
+                                default => 'role-user'
+                                };
+                                @endphp
+
+                                <span class="role-badge {{ $roleClass }}">
+                                    {{ strtoupper($user->role) }}
+                                </span>
+                            </td>
+
+                            {{-- AKSI --}}
+                            <td class="text-center">
+                                <div class="btn-group">
+
+                                    <a href="{{ route('user.edit',$user->id) }}"
+                                        class="btn btn-action btn-edit">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+
+                                    <form action="{{ route('user.destroy',$user->id) }}"
+                                        method="POST"
+                                        onsubmit="return confirm('Hapus user ini?')">
+                                        @csrf
+                                        @method('DELETE')
+
+                                        <button class="btn btn-action btn-delete">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+
+                                </div>
+                            </td>
+
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                <i class="fas fa-users fa-3x mb-3 opacity-50"></i>
+                                <div>Belum ada data pengguna</div>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+
+                </table>
+
+            </div>
+        </div>
+
+        <div class="card-footer bg-transparent border-0 text-muted px-4 py-3">
+            Total Data : {{ $users->count() }}
+        </div>
+
+    </div>
+</div>
+
+
+{{-- ================= LUXURY STYLE ================= --}}
+<style>
+    body {
+        background: linear-gradient(135deg, #f8fafc, #eef2f7);
+    }
+
+    /* HEADER */
+    .lux-header {
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+        color: white;
+        border-radius: 18px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, .12);
+    }
+
+    /* CARD */
+    .lux-card {
+        border-radius: 18px;
+        box-shadow: 0 10px 35px rgba(0, 0, 0, .08);
+        background: white;
+    }
+
+    /* BUTTON LUX */
+    .btn-luxury {
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
+        color: white;
+        border: none;
+        padding: 10px 22px;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: .3s;
+    }
+
+    .btn-luxury:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(37, 99, 235, .35);
+        color: white;
+    }
+
+    /* TABLE */
+    .lux-table thead th {
+        border: none;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        color: #94a3b8;
+        background: #f8fafc;
+    }
+
+    .lux-table tbody tr {
+        transition: .2s;
+    }
+
+    .lux-table tbody tr:hover {
+        background: #f1f5f9;
+    }
+
+    /* AVATAR */
+    .avatar-lux {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, .4);
+    }
+
+    /* ROLE BADGE */
+    .role-badge {
+        padding: 6px 14px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .role-admin {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    .role-petugas {
+        background: #dbeafe;
+        color: #2563eb;
+    }
+
+    .role-user {
+        background: #e2e8f0;
+        color: #475569;
+    }
+
+    /* ACTION BUTTON */
+    .btn-action {
+        border-radius: 10px;
+        padding: 6px 10px;
+        border: none;
+        margin: 0 3px;
+    }
+
+    .btn-edit {
+        background: #e0f2fe;
+        color: #0284c7;
+    }
+
+    .btn-delete {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    /* ALERT */
+    .alert-lux-success {
+        background: #ecfdf5;
+        color: #047857;
+        border-radius: 14px;
+    }
+</style>
+
+@endsection

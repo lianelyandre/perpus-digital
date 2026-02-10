@@ -28,7 +28,291 @@
         .user-panel {
             border-bottom: 1px solid #334155 !important;
         }
+
+        body {
+            background: #f4f6fb;
+        }
+
+        /* CARD LUXURY */
+        .lux-card {
+            border-radius: 18px;
+            border: none;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, .08);
+            overflow: hidden;
+        }
+
+        /* HEADER GRADIENT */
+        .lux-header {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 18px 22px;
+        }
+
+        /* TABLE MODERN */
+        .lux-table thead {
+            background: #f8f9fc;
+        }
+
+        .lux-table tbody tr:hover {
+            background: #f3f6ff;
+            transition: .2s;
+        }
+
+        /* INPUT MODERN */
+        .lux-input {
+            border-radius: 12px;
+            border: 1px solid #e4e7f2;
+            padding: 10px 14px;
+            transition: .25s;
+        }
+
+        .lux-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, .15);
+        }
+
+        /* BUTTON PREMIUM */
+        .lux-btn {
+            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            color: white;
+            font-weight: 600;
+            padding: 10px 22px;
+            transition: .3s;
+            box-shadow: 0 8px 18px rgba(118, 75, 162, .25);
+        }
+
+        .lux-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 30px rgba(118, 75, 162, .35);
+            color: white;
+        }
+
+        .lux-card {
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+        }
+
+        .lux-header {
+            padding: 22px 28px;
+            border-bottom: 1px solid #f1f3f6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .lux-body {
+            padding: 28px;
+        }
+
+        .text-indigo {
+            color: #6366f1;
+        }
+
+        .badge-soft {
+            background: #eef2ff;
+            color: #4f46e5;
+            padding: 8px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .lux-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .lux-table thead th {
+            background: #fafafa;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            color: #6b7280;
+            padding: 16px 22px;
+        }
+
+        .lux-table tbody td {
+            padding: 18px 22px;
+            border-top: 1px solid #f3f4f6;
+        }
+
+        .lux-table tbody tr:hover {
+            background: #fafbff;
+        }
+
+        .user-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .book-title {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .lux-btn-acc {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            border: none;
+            color: white;
+            padding: 8px 18px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 13px;
+            box-shadow: 0 6px 18px rgba(79, 70, 229, .25);
+            transition: .2s;
+        }
+
+        .lux-btn-acc:hover {
+            transform: translateY(-2px);
+        }
+
+        .empty-state {
+            padding: 40px;
+            text-align: center;
+            color: #9ca3af;
+        }
+
+        .empty-state i {
+            font-size: 26px;
+            margin-bottom: 10px;
+        }
+
+        /* ===== GLOBAL LUX SYSTEM ===== */
+
+        .lux-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, .06);
+            overflow: hidden;
+        }
+
+        .lux-header {
+            padding: 22px 28px;
+            border-bottom: 1px solid #f1f3f6;
+            font-weight: 600;
+        }
+
+        /* ===== STAT ===== */
+
+        .lux-stat {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: white;
+            padding: 22px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .05);
+        }
+
+        .lux-icon {
+            width: 58px;
+            height: 58px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 22px;
+        }
+
+        .lux-label {
+            font-size: 13px;
+            color: #9ca3af;
+        }
+
+        .lux-value {
+            font-size: 26px;
+            font-weight: 700;
+        }
+
+        /* ===== TABLE ===== */
+
+        .lux-table {
+            width: 100%;
+        }
+
+        .lux-table thead {
+            background: #fafafa;
+        }
+
+        .lux-table th {
+            padding: 16px 24px;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #9ca3af;
+        }
+
+        .lux-table td {
+            padding: 18px 24px;
+            border-top: 1px solid #f3f4f6;
+        }
+
+        .lux-table tr:hover {
+            background: #fafbff;
+        }
+
+        /* ===== BADGE ===== */
+
+        .lux-badge {
+            padding: 7px 14px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-wait {
+            background: #eef2ff;
+            color: #4f46e5;
+        }
+
+        .badge-active {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        /* ===== BUTTON ===== */
+
+        .lux-btn-warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            box-shadow: 0 6px 18px rgba(217, 119, 6, .25);
+        }
+
+        .lux-btn-warning:hover {
+            transform: translateY(-2px);
+        }
+
+        .deadline-text {
+            font-size: 12px;
+            color: #ef4444;
+            margin-top: 6px;
+        }
     </style>
+
 </head>
 
 <body class="hold-transition sidebar-mini layout-fixed">
