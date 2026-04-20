@@ -55,13 +55,10 @@
                                 Edit
                             </a>
 
-                            <form action="{{ route('buku.destroy',$b->BukuID) }}"
-                                method="POST" class="d-inline">
+                            <form action="{{ route('buku.destroy', $b->BukuID) }}" method="POST" class="d-inline form-konfirmasi" data-pesan="Yakin mau hapus buku {{ $b->Judul }} dari katalog?">
                                 @csrf
                                 @method('DELETE')
-                                <button class="btn btn-danger btn-sm shadow-sm">
-                                    Hapus
-                                </button>
+                                <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
                             </form>
                         </td>
                     </tr>

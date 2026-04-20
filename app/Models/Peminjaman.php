@@ -7,24 +7,30 @@ use Illuminate\Database\Eloquent\Model;
 class Peminjaman extends Model
 {
     protected $table = 'peminjaman';
-    protected $primaryKey = 'PeminjamanID';
+    
+    // Primary Key di gambar lu adalah 'id' (kecil)
+    protected $primaryKey = 'id'; 
+
     protected $fillable = [
-        'id', // Tambahin atau ganti jadi 'id'
+        'user_id', // Ini buat ID Peminjam (kolom nomor 2 di gambar)
         'BukuID',
         'TanggalPeminjaman',
         'TanggalPengembalian',
-        'StatusPeminjaman'
+        'StatusPeminjaman',
+        'jumlah',
+        'Denda',
+        'Stok'
     ];
 
-    // Relasi ke User (Satu pinjaman punya satu user)
+    // Relasi ke User (Sesuaikan foreign key)
     public function user()
     {
-        return $this->belongsTo(User::class, 'id');
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 
-    // Relasi ke Buku (Satu pinjaman punya satu buku)
+    // Relasi ke Buku
     public function buku()
     {
-        return $this->belongsTo(Buku::class, 'BukuID');
+        return $this->belongsTo(Buku::class, 'BukuID', 'BukuID');
     }
 }

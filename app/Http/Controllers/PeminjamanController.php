@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use App\Models\Buku;
 use App\Models\Peminjaman;
 use Illuminate\Http\Request;
@@ -22,85 +23,104 @@ class PeminjamanController extends Controller
 
     public function store(Request $request)
     {
-        $buku = Buku::findOrFail($request->BukuID);
-
-        // Cek stok sebelum request
-        if ($buku->Stok <= 0) {
-            return redirect()->back()->with('error', 'Waduh bray, stok buku ini udah abis!');
-        }
-
-        // STATUS AWAL: 'Menunggu' (Bukan 'Dipinjam')
-        // Stok BELUM berkurang di sini
-        Peminjaman::create([
-            'id'                => auth()->id(),
-            'BukuID'            => $request->BukuID,
-            'TanggalPeminjaman' => now(),
-            'TanggalPengembalian' => $request->TanggalPengembalian,
-            'StatusPeminjaman'  => 'Menunggu',
+        // 1. VALIDASI: Cek apakah BukuID ada dan jumlahnya masuk akal (minimal 1)
+        $request->validate([
+            'BukuID' => 'required|exists:buku,BukuID',
+            'jumlah' => 'required|integer|min:1'
+        ], [
+            'jumlah.min' => 'Minimal pinjam 1 buku bray!',
+            'BukuID.exists' => 'Bukunya nggak terdaftar nih.'
         ]);
 
-        return redirect()->route('dashboard')->with('success', 'Permintaan terkirim! Silahkan hubungi petugas untuk ACC.');
+        // 2. AMBIL DATA BUKU: Buat ngecek stok yang tersedia di database
+        $buku = \App\Models\Buku::findOrFail($request->BukuID);
+
+        // 3. CEK STOK: Jangan sampai user pinjam 5 tapi stok cuma 2
+        if ($buku->Stok < $request->jumlah) {
+            return back()->with('error', 'Waduh, stok "' . $buku->Judul . '" nggak cukup. Sisa stok: ' . $buku->Stok);
+        }
+
+        // 4. SIMPAN KE DATABASE: Masukin data ke tabel peminjaman
+        \App\Models\Peminjaman::create([
+            'user_id'             => auth()->id(), // MASUKKAN KE user_id, BUKAN id
+            'BukuID'              => $request->BukuID,
+            'TanggalPeminjaman'   => now(),
+            'TanggalPengembalian' => now()->addDays(7),
+            'StatusPeminjaman'    => 'Menunggu',
+            'jumlah'              => $request->jumlah,
+            'Denda'               => 0
+        ]);
+
+        // CATATAN: Stok JANGAN dikurangi di sini. 
+        // Stok baru dikurangi nanti di fungsi 'accPinjaman' pas petugas klik tombol ACC.
+
+        return redirect()->route('dashboard')
+            ->with('success', 'Permintaan pinjam ' . $request->jumlah . ' buku "' . $buku->Judul . '" berhasil dikirim. Tunggu konfirmasi ya!');
     }
 
-    // FUNGSI KHUSUS PETUGAS (ACC PINJAMAN)
     public function accPinjaman($id)
     {
-        // Proteksi: Hanya Petugas yang boleh!
-        if (Auth::user()->role !== 'petugas') {
-            return redirect()->back()->with('error', 'Cuma Petugas yang boleh ACC bray! Admin dilarang.');
+        $pinjam = \App\Models\Peminjaman::findOrFail($id);
+        $buku = \App\Models\Buku::find($pinjam->BukuID);
+
+        // Cek apakah stok di DB mencukupi
+        if ($buku->Stok >= $pinjam->jumlah) {
+
+            // 1. Update status pinjaman
+            $pinjam->update([
+                'StatusPeminjaman' => 'Dipinjam'
+            ]);
+
+            // 2. KURANGI STOK (Inilah yang bikin di DB dan tampilan berkurang)
+            $buku->decrement('Stok', $pinjam->jumlah);
+
+            return back()->with('success', 'Stok berhasil dikurangi!');
         }
 
-        $pinjam = Peminjaman::findOrFail($id);
-        $buku = Buku::find($pinjam->BukuID);
-
-        if ($buku->Stok > 0) {
-            // Update status dan kurangi stok HANYA saat di-ACC
-            $pinjam->update(['StatusPeminjaman' => 'Dipinjam']);
-            $buku->decrement('Stok');
-
-            return redirect()->back()->with('success', 'Pinjaman berhasil di-ACC oleh Petugas!');
-        }
-
-        return redirect()->back()->with('error', 'Gagal ACC, stok tiba-tiba habis!');
+        return back()->with('error', 'Stok tidak cukup!');
     }
 
     public function kembalikan($id)
     {
-        $pinjam = Peminjaman::findOrFail($id);
+        $pinjam = \App\Models\Peminjaman::findOrFail($id);
+        $buku = \App\Models\Buku::find($pinjam->BukuID);
 
-        // Pastikan cuma bisa balikin yang statusnya emang lagi 'Dipinjam'
-        if ($pinjam->StatusPeminjaman !== 'Dipinjam') {
-            return redirect()->back()->with('error', 'Buku ini belum di-ACC atau sudah dikembalikan!');
-        }
-
+        // Ubah status jadi 'Dikembalikan'
         $pinjam->update([
             'StatusPeminjaman' => 'Kembali',
             'TanggalPengembalian' => now()
         ]);
 
-        $buku = Buku::find($pinjam->BukuID);
-        if ($buku) {
-            $buku->increment('Stok');
-        }
+        // TAMBAH BALIK STOKNYA
+        $buku->increment('Stok', $pinjam->jumlah);
 
-        return redirect()->back()->with('success', 'Buku berhasil dikembalikan. Stok bertambah!');
+        return back()->with('success', 'Buku sudah dikembalikan, stok otomatis bertambah!');
     }
 
     public function konfirmasi(Request $request, $id)
     {
         $pinjam = \App\Models\Peminjaman::findOrFail($id);
-        $statusBaru = $request->status; // 'Dipinjam', 'Ditolak', atau 'Kembali'
+        $buku = \App\Models\Buku::find($pinjam->BukuID);
+        $statusBaru = $request->status; // 'Dipinjam', 'Ditolak', atau 'Dikembalikan'
 
-        // Kalau statusnya diubah jadi 'Kembali' (Buku pulang ke perpus)
-        if ($statusBaru == 'Kembali') {
-            $buku = \App\Models\Buku::find($pinjam->BukuID);
-            $buku->increment('Stok'); // Stok nambah 1
+        // JIKA STATUS DIUBAH JADI 'Dipinjam' (Proses ACC)
+        if ($statusBaru == 'Dipinjam' && $pinjam->StatusPeminjaman == 'Menunggu') {
+            if ($buku->Stok >= $pinjam->jumlah) {
+                $buku->decrement('Stok', $pinjam->jumlah);
+            } else {
+                return redirect()->back()->with('error', 'Stok buku tidak mencukupi bray!');
+            }
+        }
+
+        // JIKA STATUS DIUBAH JADI 'Dikembalikan' (Buku pulang)
+        if ($statusBaru == 'Dikembalikan' && $pinjam->StatusPeminjaman == 'Dipinjam') {
+            $buku->increment('Stok', $pinjam->jumlah);
         }
 
         $pinjam->update([
             'StatusPeminjaman' => $statusBaru
         ]);
 
-        return redirect()->back()->with('success', 'Status berhasil diupdate bray!');
+        return redirect()->back()->with('success', 'Status dan Stok berhasil diupdate!');
     }
 }

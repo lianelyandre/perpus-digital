@@ -453,6 +453,77 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+
+    {{-- ================= TAMBAHAN SWEETALERT ================= --}}
+    {{-- 1. CDN SweetAlert2 --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    {{-- 2. Script Notifikasi Otomatis (Nangkap pesan dari Controller) --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+
+            // --- ALERT SUKSES ---
+            @if(session('success'))
+            Swal.fire({
+                icon: 'success',
+                title: 'Berhasil!',
+                text: '{!! session("success") !!}',
+                background: '#ffffff',
+                color: '#0f172a',
+                confirmButtonColor: '#3b82f6',
+                timer: 3000,
+                timerProgressBar: true,
+            });
+            @endif
+
+            // --- ALERT ERROR ---
+            @if(session('error'))
+            Swal.fire({
+                icon: 'error',
+                title: 'Waduh...',
+                text: '{!! session("error") !!}',
+                background: '#ffffff',
+                color: '#0f172a',
+                confirmButtonColor: '#ef4444',
+            });
+            @endif
+        });
+    </script>
+
+    {{-- 3. Script Konfirmasi Tombol (Hapus / ACC / Tolak) --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cari semua form yang punya class 'form-konfirmasi'
+            const forms = document.querySelectorAll('.form-konfirmasi');
+
+            forms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault(); // Tahan form agar tidak langsung submit
+
+                    // Ambil pesan dari atribut data-pesan
+                    const pesan = this.getAttribute('data-pesan') || 'Apakah Anda yakin ingin melanjutkan aksi ini?';
+
+                    Swal.fire({
+                        title: 'Konfirmasi',
+                        text: pesan,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3b82f6',
+                        cancelButtonColor: '#ef4444',
+                        confirmButtonText: 'Ya, Lanjutkan!',
+                        cancelButtonText: 'Batal',
+                        reverseButtons: true
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            form.submit(); // Submit form jika user klik 'Ya'
+                        }
+                    });
+                });
+            });
+        });
+    </script>
+    {{-- ================= AKHIR SWEETALERT ================= --}}
+
 </body>
 
 </html>

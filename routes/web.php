@@ -37,7 +37,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::put('/pinjam/kembalikan/{id}', [PeminjamanController::class, 'kembalikan'])->name('pinjam.kembalikan');
 
-    Route::put('/pinjam/acc/{id}', [App\Http\Controllers\PeminjamanController::class, 'accPinjaman'])->name('pinjam.acc');
+    Route::put('/peminjaman/acc/{id}', [PeminjamanController::class, 'accPinjaman'])->name('pinjam.acc');
 });
 
 require __DIR__ . '/auth.php';

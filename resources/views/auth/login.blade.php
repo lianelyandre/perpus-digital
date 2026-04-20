@@ -34,7 +34,7 @@
 
     <div class="hidden lg:flex w-1/2 relative bg-slate-800 justify-center items-center overflow-hidden">
         <div class="absolute inset-0 z-0">
-            <img src="https://images.unsplash.com/photo-1507842217121-9e962835d75d?q=80&w=2070&auto=format&fit=crop"
+            <img src="https://images.unsplash.com/photo-1507842217343-583bb7270b66?q=80&w=1920&auto=format&fit=crop"
                 alt="Library Background"
                 class="w-full h-full object-cover opacity-60">
         </div>
@@ -117,15 +117,6 @@
                     MASUK SEKARANG
                 </button>
             </form>
-
-            <div class="text-center mt-4">
-                <p class="text-sm text-slate-400">
-                    Belum punya akun?
-                    <a href="{{ route('register') }}" class="font-medium text-gold hover:text-white transition-colors">
-                        Daftar disini
-                    </a>
-                </p>
-            </div>
         </div>
 
         <div class="absolute bottom-6 text-slate-600 text-xs">
@@ -134,5 +125,88 @@
     </div>
 
 </body>
+
+@if($errors->any())
+<div id="error-toast" class="toast-notification">
+    <div class="toast-icon">
+        <svg viewBox="0 0 24 24" width="24" height="24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" class="css-i6dzq1">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="15" y1="9" x2="9" y2="15"></line>
+            <line x1="9" y1="9" x2="15" y2="15"></line>
+        </svg>
+    </div>
+    <div class="toast-content">
+        <div class="toast-title">Gagal Masuk!</div>
+        <div class="toast-message">Username atau Password salah bro.</div>
+    </div>
+    <button class="toast-close" onclick="document.getElementById('error-toast').style.transform='translateX(200%)'">&times;</button>
+</div>
+
+<style>
+    /* CSS LANGSUNG TEMPEL */
+    .toast-notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #fff;
+        border-left: 5px solid #ff3e3e;
+        /* Garis Merah */
+        border-radius: 8px;
+        padding: 15px 20px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        z-index: 9999;
+        font-family: sans-serif;
+        animation: slideInRight 0.5s ease forwards;
+        min-width: 300px;
+    }
+
+    .toast-icon svg {
+        color: #ff3e3e;
+    }
+
+    .toast-content {
+        flex: 1;
+    }
+
+    .toast-title {
+        font-weight: bold;
+        color: #333;
+        font-size: 14px;
+        margin-bottom: 2px;
+    }
+
+    .toast-message {
+        color: #666;
+        font-size: 12px;
+    }
+
+    .toast-close {
+        background: none;
+        border: none;
+        font-size: 20px;
+        color: #aaa;
+        cursor: pointer;
+    }
+
+    .toast-close:hover {
+        color: #333;
+    }
+
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+</style>
+@endif
 
 </html>

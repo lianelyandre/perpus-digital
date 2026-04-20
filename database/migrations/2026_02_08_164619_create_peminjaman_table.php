@@ -9,12 +9,30 @@ return new class extends Migration
     public function up()
     {
         Schema::create('peminjaman', function (Blueprint $table) {
-            $table->id('PeminjamanID');
-            $table->foreignId('id')->constrained('users')->onDelete('cascade'); // Relasi ke User
-            $table->foreignId('BukuID')->constrained('buku', 'BukuID')->onDelete('cascade'); // Relasi ke Buku
+            $table->id(); // primary key default: id
+
+            $table->foreignId('user_id')
+                ->constrained('users')
+                ->onDelete('cascade');
+
+            $table->foreignId('BukuID')
+                ->constrained('buku', 'BukuID')
+                ->onDelete('cascade');
+
             $table->date('TanggalPeminjaman');
             $table->date('TanggalPengembalian');
-            $table->enum('StatusPeminjaman', ['Menunggu', 'Dipinjam', 'Kembali', 'Ditolak'])->default('Menunggu');
+
+            $table->enum('StatusPeminjaman', [
+                'Menunggu',
+                'Dipinjam',
+                'Kembali',
+                'Ditolak'
+            ])->default('Menunggu');
+
+            $table->integer('jumlah')->default(1);
+
+            $table->integer('Denda')->default(0);
+
             $table->timestamps();
         });
     }

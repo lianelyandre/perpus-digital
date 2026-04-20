@@ -108,9 +108,7 @@
                                         <i class="fas fa-edit"></i>
                                     </a>
 
-                                    <form action="{{ route('user.destroy',$user->id) }}"
-                                        method="POST"
-                                        onsubmit="return confirm('Hapus user ini?')">
+                                    <form action="{{ route('user.destroy', $user->id) }}" method="POST" class="d-inline form-konfirmasi" data-pesan="Yakin mau hapus data user ini?">
                                         @csrf
                                         @method('DELETE')
 

@@ -1,351 +1,302 @@
-{{-- ================= ELEGANT BORROWER DASHBOARD ================= --}}
+{{-- resources/views/dashboards/peminjam.blade.php --}}
+<div class="container-fluid py-4">
 
-{{-- ================= 1. STATISTIC CARDS ================= --}}
-<div class="row mb-4">
-
-    @php
-    $menunggu = \App\Models\Peminjaman::where('id', Auth::id())->where('StatusPeminjaman','Menunggu')->count();
-    $dipinjam = \App\Models\Peminjaman::where('id', Auth::id())->where('StatusPeminjaman','Dipinjam')->count();
-    $total = \App\Models\Peminjaman::where('id', Auth::id())->count();
-    @endphp
-
-    <div class="col-md-4">
-        <div class="lux-stat">
-            <div class="lux-icon bg-info">
-                <i class="fas fa-hourglass-half"></i>
+    {{-- 1. NOTIFIKASI ALERT --}}
+    <div id="alert-container">
+        @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-4" role="alert" style="border-radius: 12px;">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-check-circle mr-3 fa-lg"></i>
+                <div>
+                    <strong class="d-block">Berhasil!</strong>
+                    {{ session('success') }}
+                </div>
             </div>
-            <div>
-                <div class="lux-label">Menunggu ACC</div>
-                <div class="lux-value">{{ $menunggu }}</div>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        @endif
+
+        @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm mb-4" role="alert" style="border-radius: 12px;">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-exclamation-triangle mr-3 fa-lg"></i>
+                <div>
+                    <strong class="d-block">Waduh!</strong>
+                    {{ session('error') }}
+                </div>
+            </div>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+        @endif
+    </div>
+
+    <h4 class="font-weight-bold mb-4">👋 Halo, {{ Auth::user()->username }}!</h4>
+
+    {{-- 2. STATS PRIBADI --}}
+    <div class="row mb-4 text-center">
+        @php
+        $uid = Auth::id();
+        // Menggunakan 'user_id' agar sinkron dengan foreign key di DB
+        $menunggu = \App\Models\Peminjaman::where('user_id', $uid)->where('StatusPeminjaman','Menunggu')->count();
+        $dipinjam = \App\Models\Peminjaman::where('user_id', $uid)->where('StatusPeminjaman','Dipinjam')->count();
+        @endphp
+        <div class="col-6">
+            <div class="lux-stat border-0 shadow-sm">
+                <div class="lux-icon bg-info"><i class="fas fa-hourglass-half"></i></div>
+                <div class="text-left">
+                    <small class="text-muted">Menunggu ACC</small>
+                    <div class="h5 font-weight-bold mb-0 text-dark">{{ $menunggu }}</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="lux-stat border-0 shadow-sm">
+                <div class="lux-icon bg-success"><i class="fas fa-book-reader"></i></div>
+                <div class="text-left">
+                    <small class="text-muted">Sedang Dipinjam</small>
+                    <div class="h5 font-weight-bold mb-0 text-dark">{{ $dipinjam }}</div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="col-md-4">
-        <div class="lux-stat">
-            <div class="lux-icon bg-success">
-                <i class="fas fa-book-reader"></i>
-            </div>
-            <div>
-                <div class="lux-label">Sedang Dipinjam</div>
-                <div class="lux-value">{{ $dipinjam }}</div>
-            </div>
+    {{-- 3. AKTIVITAS PINJAMAN SAYA --}}
+    <div class="lux-card border-0 shadow-sm mb-5">
+        <div class="lux-header bg-dark d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 font-weight-bold text-white"><i class="fas fa-layer-group mr-2 text-warning"></i> Aktivitas Pinjaman Saya</h6>
+            @php
+            $myLoan = \App\Models\Peminjaman::where('user_id', $uid)
+            ->whereIn('StatusPeminjaman', ['Menunggu', 'Dipinjam'])
+            ->with('buku')->latest()->get();
+            $myLoanCount = $myLoan->count();
+            @endphp
+            <span class="badge badge-warning text-dark">{{ $myLoanCount }} Total</span>
+        </div>
+        <div class="table-responsive">
+            <table class="table lux-table mb-0 text-center">
+                <thead>
+                    <tr>
+                        <th class="border-0">Buku</th>
+                        <th class="border-0">Jumlah</th>
+                        <th class="border-0">Denda</th>
+                        <th class="border-0">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($myLoan as $ml)
+                    <tr>
+                        <td class="align-middle font-weight-bold text-dark text-left">
+                            <div class="d-flex align-items-center">
+                                <div class="bg-light p-2 rounded mr-3"><i class="fas fa-book text-primary"></i></div>
+                                {{ $ml->buku->Judul ?? 'Buku Dihapus' }}
+                            </div>
+                        </td>
+                        <td class="align-middle"><span class="badge badge-primary px-3 py-2">{{ $ml->jumlah }} Eks</span></td>
+                        <td class="align-middle">
+                            @php
+                            // 1. Ambil tanggal dari database
+                            $tgl_dead = $ml->TanggalPengembalian;
+                            $denda_final = 0;
+                            $hari_telat = 0;
+
+                            if ($tgl_dead) {
+                            // 2. Hitung pake PHP murni biar gak bentrok sama namespace Carbon
+                            $deadline_timestamp = strtotime($tgl_dead . ' 00:00:00');
+                            $sekarang_timestamp = strtotime(date('Y-m-d') . ' 00:00:00');
+
+                            if ($sekarang_timestamp > $deadline_timestamp) {
+                            $selisih_detik = $sekarang_timestamp - $deadline_timestamp;
+                            $hari_telat = floor($selisih_detik / (60 * 60 * 24)); // Konversi ke hari
+                            $denda_final = $hari_telat * 1000;
+                            }
+                            }
+                            @endphp
+
+                            @if($denda_final > 0)
+                            <div class="text-center">
+                                <span class="badge badge-danger px-3 py-2 shadow-sm" style="border-radius: 8px;">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                                    Rp {{ number_format($denda_final, 0, ',', '.') }}
+                                </span>
+                                <small class="d-block text-danger font-weight-bold mt-1">Telat {{ $hari_telat }} Hari</small>
+                            </div>
+                            @else
+                            <span class="badge badge-light text-success border px-3 py-2" style="border-radius: 8px;">
+                                <i class="fas fa-check-circle mr-1"></i> Aman
+                            </span>
+                            @endif
+                        </td>
+                        <td class="align-middle">
+                            @if($ml->StatusPeminjaman == 'Dipinjam')
+                            <form action="{{ route('pinjam.kembalikan', $ml->id) }}" method="POST" onsubmit="return confirm('Yakin mau balikin buku bray?')">
+                                @csrf @method('PUT')
+                                <button class="btn btn-warning btn-sm shadow-sm font-weight-bold px-3" style="border-radius:8px">
+                                    <i class="fas fa-undo mr-1"></i> Kembalikan
+                                </button>
+                            </form>
+                            @else
+                            <span class="badge badge-light text-muted p-2 border"><i class="fas fa-clock mr-1"></i> Menunggu ACC</span>
+                            @endif
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="4" class="py-5 text-muted">
+                            <i class="fas fa-folder-open fa-3x mb-3 d-block opacity-50"></i>
+                            Belum ada aktivitas pinjaman bray.
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <div class="col-md-4">
-        <div class="lux-stat">
-            <div class="lux-icon bg-dark">
-                <i class="fas fa-history"></i>
-            </div>
-            <div>
-                <div class="lux-label">Total Pernah Pinjam</div>
-                <div class="lux-value">{{ $total }}</div>
-            </div>
-        </div>
-    </div>
+    {{-- 4. KATALOG BUKU --}}
+    <h5 class="font-weight-bold mb-4"><i class="fas fa-book-open text-primary mr-2"></i> Pilih Buku Baru</h5>
+    <div class="row">
+        @foreach(\App\Models\Buku::all() as $b)
+        <div class="col-md-3 mb-4">
+            <div class="card h-100 border-0 shadow-sm book-card {{ $b->Stok <= 0 ? 'stock-empty' : '' }}"
+                style="border-radius:15px; overflow: hidden;">
 
-</div>
+                <div class="card-body text-center d-flex flex-column">
+                    <div class="my-3 icon-container">
+                        <i class="fas fa-book fa-3x {{ $b->Stok <= 0 ? 'text-muted' : 'text-primary' }}"></i>
+                    </div>
+                    <h6 class="font-weight-bold text-dark mb-1">{{ $b->Judul }}</h6>
+                    <small class="text-muted mb-3 d-block text-truncate">{{ $b->Penulis }}</small>
 
-
-{{-- ================= 2. MY LOAN ACTIVITY ================= --}}
-
-@php
-$myBooks = \App\Models\Peminjaman::where('id', Auth::id())
-->whereIn('StatusPeminjaman', ['Menunggu', 'Dipinjam'])
-->with('buku')
-->latest()
-->get();
-@endphp
-
-@if($myBooks->count() > 0)
-
-<div class="lux-card mb-5">
-
-    <div class="lux-header">
-        <h6>
-            <i class="fas fa-layer-group mr-2 text-warning"></i>
-            Aktivitas Pinjaman Saya
-        </h6>
-    </div>
-
-    <div class="table-responsive">
-        <table class="lux-table">
-            <thead>
-                <tr>
-                    <th>Buku</th>
-                    <th class="text-center">Status</th>
-                    <th class="text-center">Aksi</th>
-                </tr>
-            </thead>
-
-            <tbody>
-
-                @foreach($myBooks as $mb)
-                <tr>
-
-                    <td>
-                        <div class="font-weight-bold">
-                            {{ $mb->buku->Judul }}
-                        </div>
-                        <small class="text-muted">
-                            ID #{{ $mb->PeminjamanID }}
-                        </small>
-                    </td>
-
-                    <td class="text-center">
-                        <span class="lux-badge
-                    {{ $mb->StatusPeminjaman=='Menunggu' ? 'badge-wait' : 'badge-active' }}">
-                            {{ $mb->StatusPeminjaman }}
-                        </span>
-                    </td>
-
-                    <td class="text-center">
-
-                        @if($mb->StatusPeminjaman=='Dipinjam')
-
-                        <form action="{{ route('pinjam.konfirmasi',$mb->PeminjamanID) }}" method="POST">
+                    <div class="mt-auto pt-3">
+                        @if($b->Stok > 0)
+                        <form action="{{ route('pinjam.store') }}" method="POST" class="loan-form">
                             @csrf
-                            @method('PUT')
+                            <input type="hidden" name="BukuID" value="{{ $b->BukuID }}">
 
-                            <input type="hidden" name="status" value="Kembali">
+                            <div class="form-group mb-3 px-2">
+                                <label class="small font-weight-bold text-muted mb-1">Jumlah Pinjam:</label>
+                                <div class="input-group input-group-sm mx-auto shadow-none" style="max-width: 110px;">
+                                    <input type="number" name="jumlah" value="1" min="1" max="{{ $b->Stok }}"
+                                        class="form-control text-center qty-input"
+                                        style="border-radius: 8px 0 0 8px; border: 1px solid #eee;">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text bg-light text-muted small" style="border-radius: 0 8px 8px 0; border: 1px solid #eee; border-left:0;">
+                                            /{{ $b->Stok }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
 
-                            <button class="lux-btn-warning">
-                                <i class="fas fa-undo-alt mr-1"></i>
-                                Kembalikan
+                            <button type="submit" class="btn btn-primary btn-block shadow-sm py-2" style="border-radius:10px; font-weight:bold;">
+                                <i class="fas fa-plus-circle mr-1"></i> Pinjam Sekarang
                             </button>
                         </form>
-
-                        <div class="deadline-text">
-                            Deadline: {{ date('d M Y', strtotime($mb->TanggalPengembalian)) }}
-                        </div>
-
                         @else
-
-                        <small class="text-muted">
-                            <i class="fas fa-clock mr-1"></i>
-                            Menunggu ACC
-                        </small>
-
-                        @endif
-
-                    </td>
-
-                </tr>
-                @endforeach
-
-            </tbody>
-        </table>
-    </div>
-
-</div>
-
-@endif
-
-{{-- ================= 3. BOOK CATALOG ================= --}}
-
-<h4 class="section-title">
-    <i class="fas fa-book-open mr-2 text-primary"></i>
-    Katalog Koleksi
-</h4>
-
-<div class="row">
-
-    @foreach(\App\Models\Buku::with(['ulasanbuku.user'])->get() as $b)
-
-    @php $avgRating = $b->ulasanbuku->avg('Rating'); @endphp
-
-    <div class="col-lg-3 col-md-4 mb-4">
-        <div class="card book-card border-0 shadow-sm h-100">
-
-            <div class="card-body d-flex flex-column">
-
-                <div class="d-flex justify-content-between mb-2">
-                    <span class="badge badge-light border">
-                        {{ $b->TahunTerbit }}
-                    </span>
-
-                    <span class="rating">
-                        ⭐ {{ $avgRating ? number_format($avgRating,1) : '0' }}
-                    </span>
-                </div>
-
-                <h6 class="book-title">
-                    {{ Str::limit($b->Judul, 45) }}
-                </h6>
-
-                <p class="book-author">
-                    {{ $b->Penulis }}
-                </p>
-
-                {{-- Review Preview --}}
-                <div class="review-box mb-3">
-                    <b class="small text-primary">Review Pembaca</b>
-
-                    <div class="review-scroll">
-                        @forelse($b->ulasanbuku->take(2) as $u)
-                        <div class="review-item">
-                            <b>{{ $u->user->username }}</b>
-                            <span>"{{ Str::limit($u->Ulasan, 30) }}"</span>
-                        </div>
-                        @empty
-                        <small class="text-muted">Belum ada review</small>
-                        @endforelse
-                    </div>
-                </div>
-
-                <div class="mt-auto">
-                    <div class="stock-box">
-                        Stok:
-                        <b class="{{ $b->Stok > 0 ? 'text-success' : 'text-danger' }}">
-                            {{ $b->Stok }} Eks
-                        </b>
-                    </div>
-
-                    @if($b->Stok > 0)
-                    <button class="btn btn-primary btn-block btn-sm font-weight-bold"
-                        data-toggle="modal"
-                        data-target="#modalPinjam{{ $b->BukuID }}">
-                        Pinjam Sekarang
-                    </button>
-                    @else
-                    <button class="btn btn-secondary btn-block btn-sm" disabled>
-                        Stok Habis
-                    </button>
-                    @endif
-                </div>
-            </div>
-
-            <div class="card-footer bg-white border-0">
-                <form action="{{ route('ulasan.store') }}" method="POST">
-                    @csrf
-                    <input type="hidden" name="BukuID" value="{{ $b->BukuID }}">
-
-                    <div class="input-group input-group-sm">
-                        <select name="Rating" class="custom-select border-primary" style="max-width:70px">
-                            <option value="5">5★</option>
-                            <option value="4">4★</option>
-                            <option value="3">3★</option>
-                        </select>
-
-                        <input type="text"
-                            name="Ulasan"
-                            class="form-control border-primary"
-                            placeholder="Tulis review..."
-                            required>
-
-                        <div class="input-group-append">
-                            <button class="btn btn-primary">
-                                <i class="fas fa-paper-plane"></i>
+                        <div class="px-2">
+                            <div class="alert alert-secondary py-2 mb-2 border-0" style="border-radius: 10px; font-size: 11px;">
+                                <i class="fas fa-times-circle mr-1 text-danger"></i> Stok Habis di Rak
+                            </div>
+                            <button class="btn btn-light btn-block disabled text-muted mb-2" style="border-radius:10px; cursor: not-allowed; border: 1px dashed #ccc;">
+                                Buku Kosong
                             </button>
                         </div>
+                        @endif
                     </div>
-                </form>
+                </div>
             </div>
-
         </div>
+        @endforeach
     </div>
-
-    @include('peminjaman.modal_pinjam', ['book' => $b])
-
-    @endforeach
 </div>
 
-{{-- ================= STYLES ================= --}}
+{{-- CSS --}}
 <style>
-    .section-title {
-        font-weight: 700;
-        letter-spacing: 1px;
-        margin-bottom: 25px;
-    }
-
-    .stat-card {
-        border-radius: 18px;
-    }
-
-    .icon-box {
-        width: 55px;
-        height: 55px;
-        border-radius: 15px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: white;
-        font-size: 20px;
-    }
-
-    .stat-label {
-        font-size: 13px;
-        color: #888;
-        margin-bottom: 3px;
-    }
-
-    .stat-value {
-        font-weight: 700;
-    }
-
-    .bg-gradient-dark {
-        background: linear-gradient(45deg, #111, #333);
-    }
-
-    .elegant-table thead {
-        background: #f7f7f7;
-        font-size: 13px;
-        letter-spacing: .5px;
-    }
-
-    .deadline-text {
-        font-size: 12px;
-        color: #dc3545;
-        font-weight: 600;
-    }
-
     .book-card {
-        border-radius: 18px;
-        transition: all .3s ease;
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
     }
 
     .book-card:hover {
         transform: translateY(-8px);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, .08);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+        border-color: rgba(0, 123, 255, 0.2);
     }
 
-    .book-title {
-        font-weight: 600;
-        color: #222;
-        min-height: 48px;
+    .stock-empty {
+        background-color: #f8f9fa;
+        filter: grayscale(0.8);
+        opacity: 0.8;
     }
 
-    .book-author {
-        font-size: 13px;
-        color: #888;
+    .lux-stat {
+        padding: 1.25rem;
+        border-radius: 18px;
+        display: flex;
+        align-items: center;
+        background: #fff;
+        transition: 0.3s;
     }
 
-    .rating {
-        font-size: 14px;
-        font-weight: 600;
-        color: #ffb400;
+    .lux-stat:hover {
+        transform: scale(1.02);
     }
 
-    .review-box {
-        background: #fafafa;
-        border-radius: 10px;
-        padding: 8px;
+    .lux-icon {
+        width: 45px;
+        height: 45px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        color: white;
+        margin-right: 1rem;
     }
 
-    .review-scroll {
-        max-height: 55px;
-        overflow: auto;
+    .lux-card {
+        border-radius: 20px;
+        overflow: hidden;
+        background: #fff;
     }
 
-    .review-item {
-        font-size: 12px;
-        border-bottom: 1px solid #eee;
-        margin-bottom: 4px;
+    .lux-header {
+        padding: 1rem 1.5rem;
     }
 
-    .stock-box {
-        font-size: 13px;
-        margin-bottom: 10px;
+    .lux-table thead th {
+        background: #f8f9fa;
+        text-transform: uppercase;
+        font-size: 11px;
+        letter-spacing: 1px;
+        color: #777;
     }
 </style>
+
+{{-- JS --}}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(function() {
+            $('.alert').fadeTo(500, 0).slideUp(500, function() {
+                $(this).remove();
+            });
+        }, 5000);
+
+        const qtyInputs = document.querySelectorAll('.qty-input');
+        qtyInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                const max = parseInt(this.getAttribute('max'));
+                const val = parseInt(this.value);
+                if (val > max) {
+                    this.value = max;
+                    alert('Maaf bray, stok cuma tersedia ' + max + ' buku.');
+                } else if (val < 1 || isNaN(val)) {
+                    this.value = 1;
+                }
+            });
+        });
+    });
+</script>
